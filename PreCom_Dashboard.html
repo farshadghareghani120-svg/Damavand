@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="fa" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>داشبورد مدیریتی پروژه پتروشیمی دماوند</title>
+<!DOCTYPE html><html lang="fa" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>PreCom_Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
@@ -119,12 +119,14 @@ function rV(){const bad=new Set();V.forEach(v=>v.h.forEach(o=>bad.add(o.ID1)));c
 $('rl').onclick=e=>{const c=e.target.closest('.rc');if(c){rsel=+c.dataset.i;rV()}};
 /* ===== مدیریت کاربران ===== */
 const RL={admin:'مدیر',editor:'ویرایشگر',viewer:'مشاهده‌گر'};
-function rU(){$('ut').innerHTML='<thead><tr><th>نام</th><th>نام کاربری</th><th>نقش</th><th></th></tr></thead><tbody>'+(users.length?users.map(u=>`<tr><td>${esc(u.name)}</td><td dir="ltr">${esc(u.username)}</td><td>${RL[u.role]||''}</td><td><button class="d" data-d="${esc(u.username)}">حذف</button></td></tr>`).join(''):'<tr><td colspan="4" class="mu">هنوز کاربری ثبت نشده است.</td></tr>')+'</tbody>'}
+function rU(){$('ut').innerHTML='<thead><tr><th>نام</th><th>نام کاربری</th><th>نقش</th><th></th></tr></thead><tbody>'+(users.length?users.map(u=>u.username===eu?erow(u):`<tr><td>${esc(u.name)}</td><td dir="ltr">${esc(u.username)}</td><td>${RL[u.role]||''}</td><td><button data-e="${esc(u.username)}">ویرایش</button> <button class="d" data-d="${esc(u.username)}">حذف</button></td></tr>`).join(''):'<tr><td colspan="4" class="mu">هنوز کاربری ثبت نشده است.</td></tr>')+'</tbody>'}
 $('ua').onclick=async()=>{const n=$('un').value.trim(),u=$('uu').value.trim().toLowerCase();$('um').textContent='';
  if(!n)return $('um').textContent='نام را وارد کنید.';if(!/^[a-z0-9_.-]{3,30}$/.test(u))return $('um').textContent='نام کاربری باید ۳ تا ۳۰ حرف انگلیسی/عدد باشد.';
  if(users.some(x=>x.username===u))return $('um').textContent='این نام کاربری قبلاً ثبت شده است.';
  try{await API.uAdd({name:n,username:u,role:$('ur').value,created:new Date().toISOString()});$('un').value=$('uu').value=''}catch(e){$('um').textContent='ثبت انجام نشد (دسترسی نوشتن ندارید).'}};
-$('ut').onclick=async e=>{const d=e.target.dataset.d;if(!d)return;if(e.target.dataset.s){try{await API.uDel(d)}catch(x){$('um').textContent='حذف انجام نشد (دسترسی ندارید).'}return}e.target.dataset.s=1;e.target.textContent='تأیید حذف؟'};
+$('ut').onclick=async e=>{const t=e.target.dataset;if(t.e){eu=t.e;rU();return}if(t.c){eu=null;rU();return}
+ if(t.sv){const n=$('en').value.trim();if(!n){$('um').textContent='نام را وارد کنید.';return}try{await API.uUpd({username:t.sv,name:n,role:$('ero').value});eu=null;$('um').textContent=''}catch(x){$('um').textContent='ویرایش انجام نشد (دسترسی ندارید).'}rU();return}
+ const d=e.target.dataset.d;if(!d)return;if(e.target.dataset.s){try{await API.uDel(d)}catch(x){$('um').textContent='حذف انجام نشد (دسترسی ندارید).'}return}e.target.dataset.s=1;e.target.textContent='تأیید حذف؟'};
 /* ===== تب ویرایش جدول ===== */
 let ep=0,eq='',OV={},ea='',EA=[],en=0,ela=null;const SEL=k=>/State$/.test(k),BOOL=['Live_Status','PSSR'],idx={};R.forEach((o,i)=>idx[o.ID1]=i);
 function refresh(){R.forEach(o=>o.Progress=Math.round(ST.filter(s=>o[s[1]]==='Accept').length/7*100));calcV()}
@@ -148,5 +150,8 @@ function eMore(){const tb=$('et').tBodies[0];if(!tb||en>=EA.length)return;let h=
 $('et').parentNode.addEventListener('scroll',e=>{const t=e.target;if(t.scrollTop+t.clientHeight>t.scrollHeight-300)eMore()});
 $('er2').onclick=async()=>{const b=$('er2');if(!b.dataset.s){b.dataset.s=1;b.textContent='تأیید بازگردانی؟';return}delete b.dataset.s;b.textContent='بازگردانی همه ویرایش‌ها';OV={};R.forEach((o,i)=>C.forEach((n,j)=>o[n]=D.r[i][j]));refresh();rE();
  try{if(DB)await DB.doc('dash_edits/data').set({m:{}});else LS.set('ov',{})}catch(e){}};
+let eu=null;
+function erow(u){return`<tr><td><input id="en" value="${esc(u.name)}"></td><td dir="ltr">${esc(u.username)}</td><td><select id="ero">${Object.keys(RL).map(r=>`<option value="${r}" ${r===u.role?'selected':''}>${RL[r]}</option>`).join('')}</select></td><td><button class="p" data-sv="${esc(u.username)}">ذخیره</button> <button data-c="1">انصراف</button></td></tr>`}
+API.uUpd=async u=>{if(DB){await DB.doc('dash_users/'+u.username).update({name:u.name,role:u.role,updated:new Date().toISOString()})}else{users=users.map(x=>x.username===u.username?{...x,name:u.name,role:u.role}:x);LS.set('users',users)}};
 fillAr();rD();rT();rU();initDb();
 </script></body></html>
